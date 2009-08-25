@@ -26,6 +26,7 @@ function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 			else
 				SendChatMessage("i dont have " .. v, "WHISPER", nil, author)
 			end
+			break
 		end
 	end
 end

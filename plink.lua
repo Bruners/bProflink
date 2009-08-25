@@ -20,7 +20,7 @@ end)
 function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 	for k,v in pairs(profList) do
 		if msg == k then
-			local spell = select(2,GetSpellLink(v))
+			local spell = select(2,GetSpellLink(v)) 
 			if spell then
 				SendChatMessage(spell, "WHISPER", nil, author)
 			else
@@ -57,13 +57,17 @@ SlashCmdList['BLIB_PROF'] = function(arg1)
 		prof = "Blacksmithing"
 	elseif arg1 == "jc" then
 		prof = "Jewelcrafting"
-	end	
-	if(type == "WHISPER") then
-		SendChatMessage(select(2,GetSpellLink(prof)), type, nil, ChatFrameEditBox:GetAttribute"tellTarget")
-	elseif ( type == "CHANNEL") then
-		SendChatMessage(select(2,GetSpellLink(prof)) .. customTxt, type, nil, ChatFrameEditBox:GetAttribute"channelTarget")
 	else
-		SendChatMessage(select(2,GetSpellLink(prof)), type)
+		return
+	end
+	if prof then
+		if(type == "WHISPER") then
+			SendChatMessage(select(2,GetSpellLink(prof)), type, nil, ChatFrameEditBox:GetAttribute"tellTarget")
+		elseif ( type == "CHANNEL") then
+			SendChatMessage(select(2,GetSpellLink(prof)) .. customTxt, type, nil, ChatFrameEditBox:GetAttribute"channelTarget")
+		else
+			SendChatMessage(select(2,GetSpellLink(prof)), type)
+		end
 	end
 end
 

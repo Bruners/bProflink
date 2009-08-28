@@ -10,7 +10,7 @@ profList = {
 	["!tailoring"] = "Tailoring",
 }
 local customTxt = " no fee, tips are welcome"
-local f = CreateFrame("Frame", "blib", nil)
+local f = CreateFrame("Frame", "bProfLink", nil)
 
 f:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, event, ...)
@@ -19,7 +19,7 @@ end)
 
 function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 	for k,v in pairs(profList) do
-		if msg == k then
+		if msg:lower() == k then
 			local spell = select(2,GetSpellLink(v)) 
 			if spell then
 				SendChatMessage(spell, "WHISPER", nil, author)
@@ -33,7 +33,7 @@ end
 
 function f:CHAT_MSG_GUILD(event, msg, author, ...)
 	for k,v in pairs(profList) do
-		if msg == k then
+		if msg:lower() == k then
 			local spell = select(2,GetSpellLink(v))
 			if spell then
 				SendChatMessage(spell, "GUILD", nil)

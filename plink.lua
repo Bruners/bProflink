@@ -8,6 +8,14 @@ profList = {
 	["!enc"] = "Enchanting",
 	["!tail"] = "Tailoring",
 	["!tailoring"] = "Tailoring",
+	["!alc"] = "Alchemy",
+	["!alchemy"] = "Alchemy",
+	["!eng"] = "Engineering",
+	["!engineering"] = "Engineering",
+	["!ins"] = "Inscription",
+	["!inscription"] = "Inscription",
+	["!lw"] = "Leatherworking",
+	["!leatherworking"] = "Leatherworking",
 }
 local customTxt = " no fee, tips are welcome"
 local f = CreateFrame("Frame", "bProfLink", nil)

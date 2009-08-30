@@ -1,4 +1,4 @@
-profList = {
+local profList = {
 	["!bs"] = "Blacksmithing",
 	["!blacksmithing"] = "Blacksmithing",
 	["!blacksmith"] = "Blacksmithing",

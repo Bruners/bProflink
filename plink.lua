@@ -33,7 +33,7 @@ function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 			if spell then
 				SendChatMessage(spell, "WHISPER", nil, author)
 			else
-				SendChatMessage("i dont have " .. v, "WHISPER", nil, author)
+				SendChatMessage("I dont have " .. v, "WHISPER", nil, author)
 			end
 			break
 		end

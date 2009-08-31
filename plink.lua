@@ -24,11 +24,10 @@ f:SetScript("OnEvent", function(self, event, ...)
 	self[event](self, event, ...)
 end)
 
-
 function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
-			local spell = select(2,GetSpellLink(v)) 
+			local spell = select(2,GetSpellLink(v))
 			if spell then
 				SendChatMessage(spell, "WHISPER", nil, author)
 			else
@@ -54,7 +53,6 @@ end
 f:RegisterEvent("CHAT_MSG_WHISPER")
 f:RegisterEvent("CHAT_MSG_GUILD")
 
-
 SLASH_BLIB_PROF1 = '/pf'
 
 --sneak some code from instancefuuuuuu
@@ -78,5 +76,3 @@ SlashCmdList['BLIB_PROF'] = function(arg1)
 		end
 	end
 end
-
-

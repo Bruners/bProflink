@@ -61,13 +61,13 @@ SLASH_BLIB_PROF1 = '/pf'
 SlashCmdList['BLIB_PROF'] = function(arg1)
 	local type = ChatFrameEditBox:GetAttribute"chatType"
 	local prof
-	if arg1 == "bs" then
-		prof = "Blacksmithing"
-	elseif arg1 == "jc" then
-		prof = "Jewelcrafting"
-	else
-		return
+	for link, spell in pairs(profList) do
+		if(arg1:lower() == link:sub(2)) then
+			prof = spell
+			break
+		end
 	end
+
 	if prof then
 		if(type == "WHISPER") then
 			SendChatMessage(select(2,GetSpellLink(prof)), type, nil, ChatFrameEditBox:GetAttribute"tellTarget")

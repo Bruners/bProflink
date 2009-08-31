@@ -25,6 +25,8 @@ f:SetScript("OnEvent", function(self, event, ...)
 end)
 
 function f:CHAT_MSG_WHISPER(event, msg, author, ...)
+	if(author == UnitName("player")) then return end
+
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
 			local spell = select(2,GetSpellLink(v))
@@ -39,6 +41,8 @@ function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 end
 
 function f:CHAT_MSG_GUILD(event, msg, author, ...)
+	if(author == UnitName("player")) then return end
+
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
 			local spell = select(2,GetSpellLink(v))

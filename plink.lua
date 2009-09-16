@@ -20,9 +20,9 @@ local profList = {
 -- Custom text to send when sending to a channel
 local customText = " no fee, tips are welcome"
 -- guildDelay/whisperDelay wait time before sending guild/whisper
-local guildDelay, whisperDelay = 8, 0
--- lastGuild/lastWhisper the time we broadcasted to guild/whisper
-local lastGuild, lastWhisper = nil
+local guildDelay, whisperDelay = 3, 3
+-- Store time sent and who requested the link
+local spamTable = {}
 
 local f = CreateFrame("Frame", "bProfLink", nil)
 
@@ -36,11 +36,11 @@ function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
 			local currentTime = GetTime()
-			if not lastWhisper or currentTime > (lastWhisper+whisperDelay) then
+			if not spamTable[author] or currentTime > (spamTable[author]+whisperDelay) then
 				local spell = select(2,GetSpellLink(v))
 				if spell then
 					SendChatMessage(spell, "WHISPER", nil, author)
-					lastWhisper = currentTime
+					spamTable[author] = currentTime
 				else
 					SendChatMessage("I dont have " .. v, "WHISPER", nil, author)
 				end
@@ -56,11 +56,11 @@ function f:CHAT_MSG_GUILD(event, msg, author, ...)
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
 			local currentTime = GetTime()
-			if not lastGuild or currentTime > (lastGuild+guildDelay) then
+			if not spamTable[author] or currentTime > (spamTable[author]+guildDelay) then
 				local spell = select(2,GetSpellLink(v))
 				if spell then
 					SendChatMessage(spell, "GUILD", nil)
-					lastGuild = currentTime
+					spamTable[author] = currentTime
 				end
 				break
 			end

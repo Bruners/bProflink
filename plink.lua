@@ -17,12 +17,12 @@ local profList = {
 	["!lw"] = "Leatherworking",
 	["!leatherworking"] = "Leatherworking",
 }
--- Custom text to send when sending to a channel, should make this changeable ingame
-local customTxt = " no fee, tips are welcome"
--- wGTime/wWTime wait time before sending guild/whisper
-local wGTime, wWTime = 10, 10
--- sGTime/sWTime the time we broadcasted to guild/whisper
-local sGTime, sWTime = nil
+-- Custom text to send when sending to a channel
+local customText = " no fee, tips are welcome"
+-- guildDelay/whisperDelay wait time before sending guild/whisper
+local guildDelay, whisperDelay = 8, 0
+-- lastGuild/lastWhisper the time we broadcasted to guild/whisper
+local lastGuild, lastWhisper = nil
 
 local f = CreateFrame("Frame", "bProfLink", nil)
 
@@ -35,12 +35,12 @@ function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
-			local cTime = GetTime() -- current time
-			if not sWTime or cTime > (sWTime+wWTime) then
+			local currentTime = GetTime()
+			if not lastWhisper or currentTime > (lastWhisper+whisperDelay) then
 				local spell = select(2,GetSpellLink(v))
 				if spell then
 					SendChatMessage(spell, "WHISPER", nil, author)
-					sWTime = cTime
+					lastWhisper = currentTime
 				else
 					SendChatMessage("I dont have " .. v, "WHISPER", nil, author)
 				end
@@ -55,12 +55,12 @@ function f:CHAT_MSG_GUILD(event, msg, author, ...)
 
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
-			local cTime = GetTime() -- current time
-			if not sGTime or cTime > (sGTime+wGTime) then
+			local currentTime = GetTime()
+			if not lastGuild or currentTime > (lastGuild+guildDelay) then
 				local spell = select(2,GetSpellLink(v))
 				if spell then
 					SendChatMessage(spell, "GUILD", nil)
-					sGTime = cTime
+					lastGuild = currentTime
 				end
 				break
 			end
@@ -88,7 +88,7 @@ SlashCmdList['BLIB_PROF'] = function(arg1)
 		if(type == "WHISPER") then
 			SendChatMessage(select(2,GetSpellLink(prof)), type, nil, ChatFrameEditBox:GetAttribute"tellTarget")
 		elseif ( type == "CHANNEL") then
-			SendChatMessage(select(2,GetSpellLink(prof)) .. customTxt, type, nil, ChatFrameEditBox:GetAttribute"channelTarget")
+			SendChatMessage(select(2,GetSpellLink(prof)) .. customText, type, nil, ChatFrameEditBox:GetAttribute"channelTarget")
 		else
 			SendChatMessage(select(2,GetSpellLink(prof)), type)
 		end

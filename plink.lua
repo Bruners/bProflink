@@ -17,7 +17,13 @@ local profList = {
 	["!lw"] = "Leatherworking",
 	["!leatherworking"] = "Leatherworking",
 }
+-- Custom text to send when sending to a channel, should make this changeable ingame
 local customTxt = " no fee, tips are welcome"
+-- wGTime/wWTime wait time before sending guild/whisper
+local wGTime, wWTime = 10, 10
+-- sGTime/sWTime the time we broadcasted to guild/whisper
+local sGTime, sWTime = nil
+
 local f = CreateFrame("Frame", "bProfLink", nil)
 
 f:SetScript("OnEvent", function(self, event, ...)
@@ -29,13 +35,17 @@ function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
-			local spell = select(2,GetSpellLink(v))
-			if spell then
-				SendChatMessage(spell, "WHISPER", nil, author)
-			else
-				SendChatMessage("I dont have " .. v, "WHISPER", nil, author)
+			local cTime = GetTime() -- current time
+			if not sWTime or cTime > (sWTime+wWTime) then
+				local spell = select(2,GetSpellLink(v))
+				if spell then
+					SendChatMessage(spell, "WHISPER", nil, author)
+					sWTime = cTime
+				else
+					SendChatMessage("I dont have " .. v, "WHISPER", nil, author)
+				end
+				break
 			end
-			break
 		end
 	end
 end
@@ -45,11 +55,15 @@ function f:CHAT_MSG_GUILD(event, msg, author, ...)
 
 	for k,v in pairs(profList) do
 		if msg:lower() == k then
-			local spell = select(2,GetSpellLink(v))
-			if spell then
-				SendChatMessage(spell, "GUILD", nil)
+			local cTime = GetTime() -- current time
+			if not sGTime or cTime > (sGTime+wGTime) then
+				local spell = select(2,GetSpellLink(v))
+				if spell then
+					SendChatMessage(spell, "GUILD", nil)
+					sGTime = cTime
+				end
+				break
 			end
-			break
 		end
 	end
 end

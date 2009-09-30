@@ -1,22 +1,17 @@
 local profList = {
 	["!bs"] = "Blacksmithing",
 	["!blacksmithing"] = "Blacksmithing",
-	--["!blacksmith"] = "Blacksmithing",
 	["!jc"] = "Jewelcrafting",
 	["!jewelcrafting"] = "Jewelcrafting",
 	["!enchanting"] = "Enchanting",
-	--["!enc"] = "Enchanting",
-	--["!tail"] = "Tailoring",
 	["!tailoring"] = "Tailoring",
-	--["!alc"] = "Alchemy",
 	["!alchemy"] = "Alchemy",
-	--["!eng"] = "Engineering",
 	["!engineering"] = "Engineering",
-	--["!ins"] = "Inscription",
 	["!inscription"] = "Inscription",
 	["!lw"] = "Leatherworking",
 	["!leatherworking"] = "Leatherworking",
 }
+
 -- Custom text to send when sending to a channel
 local customText = " no fee, tips are welcome"
 -- guildDelay/whisperDelay wait time before sending guild/whisper
@@ -54,7 +49,7 @@ function f:CHAT_MSG_GUILD(event, msg, author, ...)
 	if(author == UnitName("player")) then return end
 
 	for k,v in pairs(profList) do
-		if msg:lower() == k or msg:sub(0,3) == k:sub(0,3) then
+		if msg:lower() == k or msg:sub(0,4) == k:sub(0,4) then
 			local currentTime = GetTime()
 			if not spamTable[author] or currentTime > (spamTable[author]+guildDelay) then
 				local spell = select(2,GetSpellLink(v))

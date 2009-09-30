@@ -1,18 +1,18 @@
 local profList = {
 	["!bs"] = "Blacksmithing",
 	["!blacksmithing"] = "Blacksmithing",
-	["!blacksmith"] = "Blacksmithing",
+	--["!blacksmith"] = "Blacksmithing",
 	["!jc"] = "Jewelcrafting",
 	["!jewelcrafting"] = "Jewelcrafting",
 	["!enchanting"] = "Enchanting",
-	["!enc"] = "Enchanting",
-	["!tail"] = "Tailoring",
+	--["!enc"] = "Enchanting",
+	--["!tail"] = "Tailoring",
 	["!tailoring"] = "Tailoring",
-	["!alc"] = "Alchemy",
+	--["!alc"] = "Alchemy",
 	["!alchemy"] = "Alchemy",
-	["!eng"] = "Engineering",
+	--["!eng"] = "Engineering",
 	["!engineering"] = "Engineering",
-	["!ins"] = "Inscription",
+	--["!ins"] = "Inscription",
 	["!inscription"] = "Inscription",
 	["!lw"] = "Leatherworking",
 	["!leatherworking"] = "Leatherworking",
@@ -34,7 +34,7 @@ function f:CHAT_MSG_WHISPER(event, msg, author, ...)
 	if(author == UnitName("player")) then return end
 
 	for k,v in pairs(profList) do
-		if msg:lower() == k then
+		if msg:lower() == k or msg:sub(0,4) == k:sub(0,4) then
 			local currentTime = GetTime()
 			if not spamTable[author] or currentTime > (spamTable[author]+whisperDelay) then
 				local spell = select(2,GetSpellLink(v))
@@ -54,7 +54,7 @@ function f:CHAT_MSG_GUILD(event, msg, author, ...)
 	if(author == UnitName("player")) then return end
 
 	for k,v in pairs(profList) do
-		if msg:lower() == k then
+		if msg:lower() == k or msg:sub(0,3) == k:sub(0,3) then
 			local currentTime = GetTime()
 			if not spamTable[author] or currentTime > (spamTable[author]+guildDelay) then
 				local spell = select(2,GetSpellLink(v))

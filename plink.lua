@@ -10,7 +10,8 @@ local profList = {
 	["!inscription"] = "Inscription",
 	["!lw"] = "Leatherworking",
 	["!leatherworking"] = "Leatherworking",
-	["!mining"] = "Mining",
+	["!smelting"] = "Smelting",
+	["!mining"] = "Smelting",
 }
 -- Custom text to send when sending to a channel
 local customText = " no fee, tips are welcome"
@@ -57,12 +58,12 @@ function f:CHAT_MSG_GUILD(event, msg, author, ...)
 	if(author == UnitName("player")) then return end
 
 	for k,v in pairs(profList) do
-		if msg:lower() == k or msg:sub(0,3) == k:sub(0,3) then
+		if msg:lower() == k or msg:sub(0,4) == k:sub(0,4) then
 			local currentTime = GetTime()
 			if not spamTable[author] or currentTime > (spamTable[author]+guildDelay) then
 				local spellCheck = select(2,GetSpellLink(v))
 				if spellCheck then
-					SendChatMessage(spell, "GUILD", nil)
+					SendChatMessage(spellCheck, "GUILD", nil)
 					spamTable[author] = currentTime
 				end
 				break
@@ -93,7 +94,7 @@ SlashCmdList['BLIB_PROF'] = function(arg1)
 	if prof then
 		if(type == "WHISPER") then
 			SendChatMessage(select(2,GetSpellLink(prof)), type, nil, ChatFrameEditBox:GetAttribute"tellTarget")
-		elseif ( type == "CHANNEL")then
+		elseif (type == "CHANNEL") then
 			SendChatMessage(select(2,GetSpellLink(prof)) .. customText, type, nil, ChatFrameEditBox:GetAttribute"channelTarget")
 		else
 			SendChatMessage(select(2,GetSpellLink(prof)), type)

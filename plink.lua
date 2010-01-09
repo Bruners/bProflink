@@ -10,8 +10,8 @@ local profList = {
 	["!inscription"] = "Inscription",
 	["!lw"] = "Leatherworking",
 	["!leatherworking"] = "Leatherworking",
-	["!smelting"] = "Smelting",
-	["!mining"] = "Smelting",
+--	["!smelting"] = "Smelting",
+--	["!mining"] = "Smelting",
 }
 -- Custom text to send when sending to a channel
 local customText = " no fee, tips are welcome"

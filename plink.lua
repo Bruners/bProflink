@@ -10,6 +10,7 @@ local profList = {
 	["!inscription"] = "Inscription",
 	["!lw"] = "Leatherworking",
 	["!leatherworking"] = "Leatherworking",
+	["!cooking"] = "Cooking",
 --	["!smelting"] = "Smelting",
 --	["!mining"] = "Smelting",
 }

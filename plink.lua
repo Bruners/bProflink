@@ -80,8 +80,14 @@ SLASH_BLIB_PROF1 = '/pf'
 
 --sneak some code from instancefuuuuuu
 SlashCmdList['BLIB_PROF'] = function(arg1)
-	local type = ChatFrameEditBox:GetAttribute"chatType"
-	local prof
+	local eb, prof, chattype
+        if(GetCVar("chatStyle") == 'classic') then
+		eb = LAST_ACTIVE_CHAT_EDIT_BOX
+		chattype = eb:GetAttribute"chatType"
+        else
+		eb = _G['ChatFrame1EditBox']
+		chattype = eb:GetAttribute"chatType"
+        end
 	for link, spell in pairs(profList) do
 		if(arg1:lower() == link:sub(2)) then
 			local spellCheck = select(2,GetSpellLink(spell))
@@ -93,12 +99,12 @@ SlashCmdList['BLIB_PROF'] = function(arg1)
 	end
 
 	if prof then
-		if(type == "WHISPER") then
-			SendChatMessage(select(2,GetSpellLink(prof)), type, nil, ChatFrameEditBox:GetAttribute"tellTarget")
-		elseif (type == "CHANNEL") then
-			SendChatMessage(select(2,GetSpellLink(prof)) .. customText, type, nil, ChatFrameEditBox:GetAttribute"channelTarget")
+		if(chattype == "WHISPER") then
+			SendChatMessage(select(2,GetSpellLink(prof)), chattype, nil, eb:GetAttribute"tellTarget")
+		elseif (chattype == "CHANNEL") then
+			SendChatMessage(select(2,GetSpellLink(prof)) .. customText, chattype, nil, eb:GetAttribute"channelTarget")
 		else
-			SendChatMessage(select(2,GetSpellLink(prof)), type)
+			SendChatMessage(select(2,GetSpellLink(prof)), chattype)
 		end
 	else
 		print("|cFF37FDFCb|rProflink: " .. channelLinkText)

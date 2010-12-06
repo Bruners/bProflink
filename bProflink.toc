@@ -1,7 +1,7 @@
-## Interface: 30300
+## Interface: 40000
 ## Title: |cFF37FDFCb|rProflink
 ## Author: Bruners
-## Version: v1.2.3
+## Version: v1.2.4
 ## Notes: Links profession links to the chat
 
 plink.lua

@@ -30,23 +30,18 @@ local LegacyGetTradeSkillLine = _G.GetTradeSkillLine
 local LegacyGetSpellLink = _G.GetSpellLink
 local IsSecretValue = _G.issecretvalue
 
--- Supported crafting, gathering, and secondary professions (Apprentice spell IDs plus optional journal/trade-skill linkSpellIDs).
+-- Craftable professions with clickable trade skill links across Retail and WoW Forever (Apprentice spell IDs).
 local ALL_PROFESSIONS = {
 	{ name = "Alchemy", spellID = 2259, alias = "alch" },
 	{ name = "Blacksmithing", spellID = 2018, alias = "bs" },
 	{ name = "Enchanting", spellID = 7411, alias = "ench" },
 	{ name = "Engineering", spellID = 4036, alias = "eng" },
-	{ name = "Herbalism", spellID = 2366, linkSpellIDs = { 193290 }, alias = "herb" },
 	{ name = "Inscription", spellID = 45357, alias = "insc", retailOnly = true },
 	{ name = "Jewelcrafting", spellID = 25229, alias = "jc", retailOnly = true },
 	{ name = "Leatherworking", spellID = 2108, alias = "lw" },
-	{ name = "Mining", spellID = 2575, linkSpellIDs = { 2656 }, alias = "mine" },
-	{ name = "Skinning", spellID = 8613, linkSpellIDs = { 194174 }, alias = "skin" },
 	{ name = "Tailoring", spellID = 3908, alias = "tail" },
-	{ name = "Archaeology", spellID = 78670, alias = "arch", retailOnly = true },
 	{ name = "Cooking", spellID = 2550, alias = "cook" },
 	{ name = "First Aid", spellID = 3273, alias = "fa", excludeRetail = true },
-	{ name = "Fishing", spellID = 7620, linkSpellIDs = { 271990, 131474 }, alias = "fish" },
 }
 
 local PROFESSIONS = {}
@@ -72,9 +67,6 @@ local TRIGGER_TO_PROFESSION = {
 	engi = "Engineering",
 	engineer = "Engineering",
 	engineering = "Engineering",
-	herb = "Herbalism",
-	herbalism = "Herbalism",
-	herbing = "Herbalism",
 	insc = "Inscription",
 	inscr = "Inscription",
 	scribe = "Inscription",
@@ -86,25 +78,14 @@ local TRIGGER_TO_PROFESSION = {
 	lw = "Leatherworking",
 	leather = "Leatherworking",
 	leatherworking = "Leatherworking",
-	mine = "Mining",
-	mining = "Mining",
-	smelt = "Mining",
-	smelting = "Mining",
-	skin = "Skinning",
-	skinning = "Skinning",
 	tail = "Tailoring",
 	tailor = "Tailoring",
 	tailoring = "Tailoring",
-	arch = "Archaeology",
-	archaeology = "Archaeology",
-	archeology = "Archaeology",
 	cook = "Cooking",
 	cooking = "Cooking",
 	fa = "First Aid",
 	firstaid = "First Aid",
 	["first aid"] = "First Aid",
-	fish = "Fishing",
-	fishing = "Fishing",
 }
 
 local spamTable = {}
@@ -232,11 +213,6 @@ local function GetProfessionTradeLink(profEntry)
 	end
 
 	AddCandidateName(GetLocalizedProfessionName(profEntry))
-	if profEntry.linkSpellIDs then
-		for _, linkSpellID in ipairs(profEntry.linkSpellIDs) do
-			AddCandidateName(GetSpellNameByID(linkSpellID))
-		end
-	end
 	AddCandidateName(profEntry.name)
 
 	-- Tier 1: Direct C_Spell trade skill link lookup (11.0+ / Forever engine).
@@ -250,14 +226,6 @@ local function GetProfessionTradeLink(profEntry)
 		local link = GetSpellTradeSkillLink(profEntry.spellID)
 		if type(link) == "string" and link ~= "" then
 			return link
-		end
-		if profEntry.linkSpellIDs then
-			for _, linkSpellID in ipairs(profEntry.linkSpellIDs) do
-				link = GetSpellTradeSkillLink(linkSpellID)
-				if type(link) == "string" and link ~= "" then
-					return link
-				end
-			end
 		end
 	end
 
@@ -426,6 +394,25 @@ local function SafeSendChatMessage(message, chatType, target)
 	return true
 end
 
+--- Sends a Battle.net whisper by account ID, guarding against lockdown and invalid payloads.
+-- @param bnetIDAccount number|nil Battle.net account ID
+-- @param message string Message text
+-- @return boolean True if dispatched
+local function SendBNetWhisperByID(bnetIDAccount, message)
+	if IsChatLockedDown() or type(bnetIDAccount) ~= "number" or type(message) ~= "string" or message == "" then
+		return false
+	end
+	if C_BattleNet and C_BattleNet.SendWhisper then
+		C_BattleNet.SendWhisper(bnetIDAccount, message)
+		return true
+	end
+	if BNSendWhisper then
+		BNSendWhisper(bnetIDAccount, message)
+		return true
+	end
+	return false
+end
+
 --- Appends the configured custom channel text without ever truncating the hyperlink.
 -- @param link string Profession trade skill hyperlink
 -- @return string Formatted chat payload within MAX_CHAT_LENGTH bytes
@@ -443,19 +430,33 @@ local function BuildChannelPayload(link)
 	return link .. " " .. customText:sub(1, maxSuffix)
 end
 
---- Processes incoming whisper or guild chat profession link requests.
--- @param chatType string "WHISPER" or "GUILD"
--- @param delay number Per-author throttle duration in seconds
+--- Processes incoming whisper, Battle.net whisper, or guild chat profession link requests.
+-- @param chatType string "WHISPER", "BN_WHISPER", or "GUILD"
+-- @param delay number Per-sender throttle duration in seconds
 -- @param replyWhenMissing boolean Whether to reply when the player lacks the profession
 -- @param msg string Chat message payload
--- @param author string Sender name
+-- @param author string|nil Sender name
 -- @param senderGUID string|nil Sender GUID
-local function HandleChatRequest(chatType, delay, replyWhenMissing, msg, author, senderGUID)
-	if IsChatLockedDown() or IsAnySecret(msg, author, senderGUID) then
+-- @param bnetIDAccount number|nil Sender Battle.net account ID (for BN_WHISPER)
+local function HandleChatRequest(chatType, delay, replyWhenMissing, msg, author, senderGUID, bnetIDAccount)
+	if IsChatLockedDown() or IsAnySecret(msg, author, senderGUID, bnetIDAccount) then
 		return
 	end
-	if type(msg) ~= "string" or type(author) ~= "string" or IsPlayerSelf(author, senderGUID) then
+	if type(msg) ~= "string" then
 		return
+	end
+
+	local throttleKey
+	if chatType == "BN_WHISPER" then
+		if type(bnetIDAccount) ~= "number" then
+			return
+		end
+		throttleKey = "bn:" .. tostring(bnetIDAccount)
+	else
+		if type(author) ~= "string" or IsPlayerSelf(author, senderGUID) then
+			return
+		end
+		throttleKey = author
 	end
 
 	local trimmed = Trim(msg)
@@ -469,20 +470,27 @@ local function HandleChatRequest(chatType, delay, replyWhenMissing, msg, author,
 	end
 
 	local now = GetTime()
-	if IsThrottled(author, delay, now) then
+	if IsThrottled(throttleKey, delay, now) then
 		return
 	end
 
-	local target = (chatType == "WHISPER") and author or nil
+	local function DispatchReply(payload)
+		if chatType == "BN_WHISPER" then
+			return SendBNetWhisperByID(bnetIDAccount, payload)
+		end
+		local target = (chatType == "WHISPER") and author or nil
+		return SafeSendChatMessage(payload, chatType, target)
+	end
+
 	local link = GetProfessionTradeLink(profEntry)
 	if link then
-		if SafeSendChatMessage(link, chatType, target) then
-			MarkSent(author, now)
+		if DispatchReply(link) then
+			MarkSent(throttleKey, now)
 		end
 	elseif replyWhenMissing then
 		local missingReply = WHISPER_MISSING_PREFIX .. GetLocalizedProfessionName(profEntry)
-		if SafeSendChatMessage(missingReply, chatType, target) then
-			MarkSent(author, now)
+		if DispatchReply(missingReply) then
+			MarkSent(throttleKey, now)
 		end
 	end
 end
@@ -502,6 +510,10 @@ function eventHandlers:CHAT_MSG_WHISPER(msg, author, _, _, _, _, _, _, _, _, _, 
 	HandleChatRequest("WHISPER", GetDB().whisperDelay, true, msg, author, senderGUID)
 end
 
+function eventHandlers:CHAT_MSG_BN_WHISPER(msg, author, _, _, _, _, _, _, _, _, _, senderGUID, bnetIDAccount)
+	HandleChatRequest("BN_WHISPER", GetDB().whisperDelay, true, msg, author, senderGUID, bnetIDAccount)
+end
+
 function eventHandlers:CHAT_MSG_GUILD(msg, author, _, _, _, _, _, _, _, _, _, senderGUID)
 	HandleChatRequest("GUILD", GetDB().guildDelay, false, msg, author, senderGUID)
 end
@@ -515,6 +527,7 @@ end)
 
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("CHAT_MSG_WHISPER")
+frame:RegisterEvent("CHAT_MSG_BN_WHISPER")
 frame:RegisterEvent("CHAT_MSG_GUILD")
 
 --- Prints command usage, active flavor professions, and current channel message.
@@ -573,18 +586,7 @@ local function TrySendBNetWhisper(target, link)
 		return false
 	end
 	local bnetIDAccount = BNet_GetBNetIDAccount(target)
-	if not bnetIDAccount then
-		return false
-	end
-	if C_BattleNet and C_BattleNet.SendWhisper then
-		C_BattleNet.SendWhisper(bnetIDAccount, link)
-		return true
-	end
-	if BNSendWhisper then
-		BNSendWhisper(bnetIDAccount, link)
-		return true
-	end
-	return false
+	return SendBNetWhisperByID(bnetIDAccount, link)
 end
 
 SLASH_PROFESSIONLINK1 = "/pf"

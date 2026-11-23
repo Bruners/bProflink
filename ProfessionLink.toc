@@ -1,7 +1,9 @@
-## Interface: 40000
-## Title: |cFF37FDFCb|rProflink
+## Interface: 120100, 120105, 16001, 16002
+## Title: Profession Link
 ## Author: Bruners
-## Version: v1.2.4
-## Notes: Links profession links to the chat
+## Version: 2.0.0
+## Notes: Automatically replies to profession link requests in whisper/guild chat and links professions via /pf or /pl.
+## IconTexture: 8197101
+## SavedVariables: ProfessionLinkDB
 
-plink.lua
+ProfessionLink.lua

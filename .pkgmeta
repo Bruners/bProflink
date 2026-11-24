@@ -1,0 +1,7 @@
+package-as: ProfessionLink
+
+ignore:
+  - .github
+  - .gitignore
+  - .pkgmeta
+  - "*.zip"

@@ -1,0 +1,78 @@
+name: Build Release Zip
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to build and attach zip for (e.g. v2.0.0)"
+        required: true
+        type: string
+        default: "v2.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Package addon zip
+        id: package
+        shell: bash
+        env:
+          TAG_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [[ ! "${TAG_NAME}" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "Invalid tag name: ${TAG_NAME}" >&2
+            exit 1
+          fi
+
+          STAGE_DIR="dist/ProfessionLink"
+          ZIP_NAME="ProfessionLink-${TAG_NAME}.zip"
+          rm -rf dist "${ZIP_NAME}"
+          mkdir -p "${STAGE_DIR}"
+
+          shopt -s nullglob
+          files=( *.toc *.lua *.xml )
+          if (( ${#files[@]} == 0 )); then
+            echo "No addon files (*.toc, *.lua, *.xml) found." >&2
+            exit 1
+          fi
+          cp -f "${files[@]}" "${STAGE_DIR}/"
+
+          if [[ ! -f "${STAGE_DIR}/ProfessionLink.toc" ]]; then
+            echo "Missing ProfessionLink.toc in package." >&2
+            exit 1
+          fi
+
+          (cd dist && zip -r "../${ZIP_NAME}" ProfessionLink)
+          echo "tag=${TAG_NAME}" >> "${GITHUB_OUTPUT}"
+          echo "zip=${ZIP_NAME}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.zip }}
+          path: ${{ steps.package.outputs.zip }}
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ steps.package.outputs.tag }}
+          ZIP_NAME: ${{ steps.package.outputs.zip }}
+        run: |
+          set -euo pipefail
+          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+            gh release upload "${TAG_NAME}" "${ZIP_NAME}" --clobber
+          else
+            gh release create "${TAG_NAME}" "${ZIP_NAME}" --title "Profession Link ${TAG_NAME}" --generate-notes
+          fi
